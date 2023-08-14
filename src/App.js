@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route, Link, useLocation } from "react-router-dom";
 import Login from "./LoginForm";
 import Profile from "./Profile";
 import MyPosts from "./MyPosts";
@@ -9,60 +9,17 @@ import Category from "./Category";
 import BlogEditor from "./BlogEditor";
 import articles from "./ArticleData"; // Import the sample article data
 import RegisterForm from "./RegisterForm";
-import seedData from "./seedData";
+import axios from "axios";
 import PricingPage from "./PricingPage";
 import "./style.css";
 import Drafts from "./Drafts";
 import BlogEdit from "./BlogEdit";
 import "./App.css"
 import SaveForLater from "./SaveForLater";
-const NavigationLinks = ({ user, categories }) => {
-  return (
-    <nav>
-      <ul>
-        <li>
-          <Link to="/">Home</Link>
-        </li>
-        {user ? (
-          <>
-            <li>
-              <Link to="/profile">Profile</Link>
-            </li>
-            <li>
-              <Link to="/my-posts">My Posts</Link>
-            </li>
-            <li>
-              <Link to="/follow-authors">Follow Authors</Link>
-            </li>
-          </>
-        ) : (
-          <>
-            <li>
-              <Link to="/register">Register</Link>
-            </li>
-            <li>
-              <Link to="/login">Login</Link>
-            </li>
-          </>
-        )}
-        {categories.map((category) => (
-          <li key={category}>
-            <Link to={`/category/${category}`}>
-              {category.charAt(0).toUpperCase() + category.slice(1)}
-            </Link>
-          </li>
-        ))}
-        <li>
-          <Link to="/drafts">Draft</Link>
-        </li>
-        <li>
-          <Link to="/blog-editor">Blog Editor</Link>
-        </li>
-        <Link to="/saved-posts">View Saved Posts</Link>
-      </ul>
-    </nav>
-  );
-};
+import NavigationLinks from "./NavigationLinks"
+// import NewPostForm from "./NewPostForm"; 
+
+
 
 const SaveForLaterPosts = ({ savedPosts }) => {
   return (
@@ -75,6 +32,7 @@ const SaveForLaterPosts = ({ savedPosts }) => {
           onDelete={() => {}}
           onEdit={() => {}}
           onSaveForLater={() => {}}
+          onAddDraft={() => {}}
         />
       ))}
     </div>
@@ -84,7 +42,7 @@ const SaveForLaterPosts = ({ savedPosts }) => {
 
 const calculateReadingTime = (text) => {
   if (!text) {
-    return "N/A"; // Return a custom message for unknown reading time
+    return "Content not available"; // Return a custom message for unknown reading time
   }
 
   const wordsPerMinute = 200;
@@ -94,7 +52,7 @@ const calculateReadingTime = (text) => {
 };
 
 
-const Blog = ({ post, onDelete, onEdit, onSaveForLater }) => {
+const Blog = ({ post, onDelete, onEdit, onSaveForLater, onAddDraft }) => {
   const readingTime = calculateReadingTime(post.text);
 
   return (
@@ -108,11 +66,12 @@ const Blog = ({ post, onDelete, onEdit, onSaveForLater }) => {
       <p>Likes: {post.likes}</p>
       <p>Comments: {post.comments}</p>
       <p>
-        Reading Time: {readingTime === "N/A" ? "N/A" : `${readingTime}${readingTime !== 1 ? 's' : ''}`}
+        Reading Time: {readingTime === "N/A" ? "N/A" : `${readingTime} minute${readingTime !== 1 ? 's' : ''}`}
       </p>
       <button onClick={() => onEdit(post)}>Edit</button>
       <button onClick={() => onDelete(post.id)}>Delete Post</button>
       <button onClick={() => onSaveForLater(post)}>Save for Later</button>
+      <button> onClick={() => onAddDraft(post)}Add to Drafts</button>
     </div>
   );
 };
@@ -123,15 +82,23 @@ const App = () => {
 
 
   const [savedPosts, setSavedPosts] = useState([]);
+  const [drafts, setDrafts] = useState([]);
 const [filterAuthor, setFilterAuthor] = useState("");
 const [filterDate, setFilterDate] = useState("");
   const [user, setUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [posts, setPosts] = useState(seedData);
+  const [posts, setPosts] = useState([]); 
   const [filteredPosts, setFilteredPosts] = useState([]); // Set initial value to []
   const [showEditForm, setShowEditForm] = useState(false);
   const [sortOrder, setSortOrder] = useState(""); // Possible values: "likes", "comments", ""
   const [sortedPosts, setSortedPosts] = useState([]);
+  const [showAllPosts, setShowAllPosts] = useState(false);
+
+  const [showAddNewPostForm, setShowAddNewPostForm] = useState(false);
+
+  const handleToggleNewPostForm = () => {
+    setShowAddNewPostForm(!showAddNewPostForm);
+  };
 
 
   const sortByLikes = () => {
@@ -158,8 +125,23 @@ const [filterDate, setFilterDate] = useState("");
     localStorage.setItem("savedPosts", JSON.stringify([...savedPosts, post]));
   };
 
+  const addDraft = (post) => {
+    setDrafts((prevDrafts) => [...prevDrafts, post]);
+    localStorage.setItem("drafts", JSON.stringify([...drafts, post]));
+  }
 
 
+
+  useEffect(() => {
+    // Fetch the data from the backend API
+    axios.get("http://localhost:5000/api/blogs")
+      .then((response) => {
+        setPosts(response.data); // Set the fetched data in the state
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+  }, []); 
 
 
 
@@ -300,6 +282,11 @@ const [filterDate, setFilterDate] = useState("");
       author: "",
     });
   };
+  const location = useLocation();
+  const isAllPostsRoute = location.pathname === "/all-posts";
+
+  // Filter the posts based on the route
+  const postsToShow = isAllPostsRoute ? filteredPosts : filteredPosts.slice(0, 2); // Show 2 posts in initial view
 
   return (
     <div>
@@ -319,21 +306,21 @@ const [filterDate, setFilterDate] = useState("");
   ))}
   <Route path="/" exact>
     <h1>Welcome to the Home Page</h1>
-    {/* <ul>
-      {categories.map((category) => (
-        <li key={category}>
-          <Link to={`/category/${category}`}>
-            {category.charAt(0).toUpperCase() + category.slice(1)}
-          </Link>
-        </li>
-      ))}
-    </ul> */}
+    
+    {filteredPosts.map((post) => (
+              <Blog
+                key={post.id}
+                post={post}
+                onDelete={deletePost}
+                onEdit={editPost}
+                onSaveForLater={saveForLater}
+                onAddDraft={() => addDraft}
+              />
+            ))}
   </Route>
   <Route path="/pricing" component={PricingPage} />
-</Switch>
-
-       {/* Search */}
-       <div className="search-bar">
+  <Route path="/all-posts">
+  <div className="search-bar">
           <input
             type="text"
             placeholder="Search by post, author, or topic..."
@@ -373,6 +360,7 @@ const [filterDate, setFilterDate] = useState("");
               onDelete={deletePost}
               onEdit={editPost}
               onSaveForLater={saveForLater} 
+              onAddDraft={addDraft}
             />
           ))
         ) : (
@@ -383,6 +371,7 @@ const [filterDate, setFilterDate] = useState("");
               onDelete={deletePost}
               onEdit={editPost}
               onSaveForLater={saveForLater}
+              onAddDraft={addDraft}
             />
           )))}
 
@@ -397,10 +386,10 @@ const [filterDate, setFilterDate] = useState("");
             }}
           />
         )}
-     
-
-        {/* Add new post */}
-        <div className="new-post">
+           
+            <button onClick={handleToggleNewPostForm}>Add New Post</button>
+            {showAddNewPostForm && (
+              <div className="new-post">
           <h2>Add New Post</h2>
           <input
             type="text"
@@ -449,6 +438,11 @@ const [filterDate, setFilterDate] = useState("");
             <button onClick={updatePost}>Update Post</button>
           )}
         </div>
+            )}
+          </Route>
+</Switch>
+
+
         <Route path="/saved-posts">
         <SaveForLaterPosts savedPosts={savedPosts} />
       </Route>

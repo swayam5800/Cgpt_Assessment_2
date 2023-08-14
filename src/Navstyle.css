@@ -1,0 +1,42 @@
+/* NavigationLinks.css */
+
+.navigation {
+    background-color: #2980b9;
+    height: 75px; /* Reduce the height to 65px */
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .logo {
+    flex: 1;
+  }
+  
+  .logo-image {
+    margin:10px 0px;
+    width: 150px; /* Adjust the width as needed */
+    height: 70px; /* Automatically adjust height to maintain aspect ratio */
+  }
+  
+  .navigation-links {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .nav-link {
+    color: #ecf0f1;
+    text-decoration: none;
+    margin: 0 10px; /* Reduce spacing */
+    padding: 5px 10px; /* Add padding to navigation links */
+    font-weight: bold; /* Make navigation links bold */
+    transition: color 0.3s;
+  }
+  
+  .nav-link:hover {
+    color: #e74c3c;
+  }
+  
