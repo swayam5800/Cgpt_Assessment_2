@@ -1,75 +1,110 @@
 import React, { useState } from "react";
-import axios from "axios";
+import "./PostCreationForm.css"; // Import your custom CSS file for styling
 
 const PostCreationForm = ({ user }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [image, setImage] = useState(null);
   const [isDraft, setIsDraft] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSaveDraft = () => {
-    const postData = {
+    setLoading(true);
+
+    const draftData = {
       title,
       content,
-      isDraft: true, // Set the post as a draft
+      image,
+      isDraft: true,
+      author: user.name, // Assuming the user object has a 'name' property
+      timestamp: new Date().toISOString(),
     };
 
-    axios
-      .post("/api/create-post", postData, {
-        headers: { Authorization: `Bearer ${user}` },
-      })
-      .then((response) => {
-        // Handle success, e.g., show a notification to the user
-        console.log("Post saved as draft");
-      })
-      .catch((error) => {
-        console.error("Error saving draft:", error);
-      });
+    const drafts = JSON.parse(localStorage.getItem("drafts")) || [];
+    drafts.push(draftData);
+    localStorage.setItem("drafts", JSON.stringify(drafts));
+
+    // Handle success, e.g., show a notification to the user
+    console.log("Post saved as draft");
+
+    setLoading(false);
   };
 
   const handlePublishPost = () => {
+    setLoading(true);
+
     const postData = {
       title,
       content,
-      isDraft: false, // Set the post as not a draft (publish)
+      image,
+      isDraft: false,
+      author: user.name, // Assuming the user object has a 'name' property
+      timestamp: new Date().toISOString(),
     };
 
-    axios
-      .post("/api/create-post", postData, {
-        headers: { Authorization: `Bearer ${user}` },
-      })
-      .then((response) => {
-        // Handle success, e.g., show a notification to the user
-        console.log("Post published");
-      })
-      .catch((error) => {
-        console.error("Error publishing post:", error);
-      });
+    const publishedPosts =
+      JSON.parse(localStorage.getItem("publishedPosts")) || [];
+    publishedPosts.push(postData);
+    localStorage.setItem("publishedPosts", JSON.stringify(publishedPosts));
+
+    // Handle success, e.g., show a notification to the user
+    console.log("Post published");
+
+    setLoading(false);
   };
 
   return (
-    <div>
+    <div className="post-creation-form">
       <h2>Create a New Post</h2>
-      <input
-        type="text"
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <textarea
-        placeholder="Content"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-      />
-      <label>
+      <div className="form-group">
+        <label>Title</label>
         <input
-          type="checkbox"
-          checked={isDraft}
-          onChange={() => setIsDraft(!isDraft)}
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
-        Save as Draft
-      </label>
-      <button onClick={handleSaveDraft}>Save Draft</button>
-      <button onClick={handlePublishPost}>Publish</button>
+      </div>
+      <div className="form-group">
+        <label>Content</label>
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
+      </div>
+      <div className="form-group">
+        <label>Image</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setImage(e.target.files[0])}
+        />
+      </div>
+      <div className="form-group">
+        <label>
+          <input
+            type="checkbox"
+            checked={isDraft}
+            onChange={() => setIsDraft(!isDraft)}
+          />
+          Save as Draft
+        </label>
+      </div>
+      <div className="button-group">
+        <button
+          className="save-draft-button"
+          onClick={handleSaveDraft}
+          disabled={loading}
+        >
+          {loading ? "Saving..." : "Save Draft"}
+        </button>
+        <button
+          className="publish-button"
+          onClick={handlePublishPost}
+          disabled={loading}
+        >
+          {loading ? "Publishing..." : "Publish"}
+        </button>
+      </div>
     </div>
   );
 };

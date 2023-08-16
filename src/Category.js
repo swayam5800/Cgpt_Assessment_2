@@ -1,5 +1,6 @@
 import React from "react";
 import "./Category.css";
+import ShareButton from "./ShareButton";
 
 const Category = ({ name, articles }) => {
   return (
@@ -15,6 +16,7 @@ const Category = ({ name, articles }) => {
               <p className="article-reading-time">
                 Reading Time: {article.readingTime}
               </p>
+              <ShareButton postTitle={article.title} />
             </div>
           </div>
         ))}

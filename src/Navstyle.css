@@ -16,6 +16,7 @@
     margin:10px 0px;
     width: 150px; /* Adjust the width as needed */
     height: 70px; /* Automatically adjust height to maintain aspect ratio */
+    background-color: #2980b9;
   }
   
   .navigation-links {

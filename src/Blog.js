@@ -1,5 +1,7 @@
 import React from "react";
+import RevisionHistory from "./RevisionHistory";
 import "./Blog.css";
+import ShareButton from "./ShareButton";
 
 const Blog = ({ post }) => {
   return (
@@ -15,7 +17,9 @@ const Blog = ({ post }) => {
         <div className="blog-stat">
           <i className="fas fa-eye"></i> Views: {post.views}
         </div>
+        <RevisionHistory postId={post.id} />
       </div>
+      <ShareButton postTitle={post.title}></ShareButton>
     </div>
   );
 };

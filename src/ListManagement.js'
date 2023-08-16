@@ -1,0 +1,31 @@
+import React, { useState } from 'react';
+
+const ListManagement = ({ list, onUpdateList, onRemovePost }) => {
+  const [newListName, setNewListName] = useState(list.name);
+
+  const handleUpdateListName = () => {
+    onUpdateList({ ...list, name: newListName });
+  };
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={newListName}
+        onChange={(e) => setNewListName(e.target.value)}
+      />
+      <button onClick={handleUpdateListName}>Update List Name</button>
+      <h3>Posts in this List</h3>
+      <ul>
+        {list.posts.map((post) => (
+          <li key={post.id}>
+            {post.title}{' '}
+            <button onClick={() => onRemovePost(post.id)}>Remove</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default ListManagement;
